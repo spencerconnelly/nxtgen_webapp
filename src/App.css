@@ -1,0 +1,27 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 60px;
+  padding-bottom: 5px;
+}
+
+.name {
+  color: white;
+  text-align: left;
+}
+
+.navbutton {
+  border-style: solid;
+  border-width: 2px;
+  border-radius: 5px;
+  margin-top: 15px;
+  margin-bottom: 10px;
+  margin-left: 20px;
+  margin-right: 20px;
+  height: 50px;
+}
+
+
+

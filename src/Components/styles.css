@@ -1,0 +1,55 @@
+.table{
+	margin-top: 20px;
+}
+
+td {
+	text-align: left;
+}
+
+.growth{
+	color: green;
+}
+
+.loss{
+	color: red;
+}
+
+.thead-inverse{
+	background-color: #292929;
+	color: white;
+}
+
+tbody tr:hover {
+	background-color: #D3D3D3;
+	cursor: pointer;
+}
+
+.footer {
+	color: #D3D3D3;
+	font-style: italic;
+}
+
+.coinmodal {
+	position: fixed;
+	top:25%;
+	left: 30%;
+	width: 40%;
+	height: 40%;
+    background-color: white;
+    border: solid;
+    border-width: 3px;
+}
+
+.balancetitle {
+	text-align: left;
+}
+
+.port-button {
+	position: relative;
+	margin-top: 5%;
+	margin-right: 5%;
+}
+
+
+
+
