@@ -23,7 +23,6 @@ class HomePage extends React.Component {
   }
 
   fetchData() {
-    console.log('yes');
     fetch("https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,ETH,XRP,BCH,LTC,ADA,XLM,NEO,IOT,XMR&tsyms=USD")
     .then(res => res.json())
     .then(

@@ -16,32 +16,59 @@ class Portfolio extends React.Component {
       wallet: {},
       coinQuantities: [],
       usBalance: 0.00,
-      coinQuantity: 0
+      coinQuantity: 0,
+      showModal: false,
+      showBuyModal: true,
+      showSellModal: null,
     };
 
+    this.fetchData=this.fetchData.bind(this);
+    this.printwallet=this.printwallet.bind(this);
     this.openBuyModal=this.openBuyModal.bind(this);
     this.openSellModal=this.openSellModal.bind(this);
     this.closeModal=this.closeModal.bind(this);
-    this.handleSubmit=this.handleSubmit.bind(this);
+    this.handleAddSubmit=this.handleAddSubmit.bind(this);
     this.handleDropChange=this.handleDropChange.bind(this);
     this.handleInputChange=this.handleInputChange.bind(this);
   }
 
-  handleSubmit(event){
+  fetchData(){
+    fetch("https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,ETH,XRP,BCH,LTC,ADA,XLM,NEO,IOT,XMR&tsyms=USD")
+    .then(res => res.json())
+    .then(
+      (result) => {
+        this.setState({
+          coins: result.DISPLAY
+        });
+      })
+    .then(
+      (error) => {
+        this.setState({
+          isLoaded: true,
+          error
+        });
+      }
+    );
+  }
+
+  handleAddSubmit(event){
     if(!(this.state.BuySym in this.state.wallet)  &&  (this.state.coinQuantity > 0)){
-      var newInput = Object.assign({}, this.state.wallet, {[this.state.BuySym]: this.state.coinQuantity});
+      var newInput = Object.assign({}, this.state.wallet, {[this.state.BuySym]: Number(this.state.coinQuantity)});
       this.setState({wallet: newInput});
       this.closeModal();
     } else if(this.state.coinQuantity <= 0) {
       alert("Please Enter a Value Greater than 0 for Coin Quantity");
     } else {
-      const num = Number(this.state.wallet[this.state.BuySym]) + Number(this.state.coinQuantity);
+      const num = this.state.wallet[this.state.BuySym] + Number(this.state.coinQuantity);
       this.state.wallet[this.state.BuySym] = num ;
 
       this.closeModal();
     }
     event.preventDefault();
-    console.log(this.state.wallet);
+  }
+
+  handleSellSubmit(event) {
+    console.log("sold");
   }
 
   handleDropChange(event) {
@@ -62,44 +89,50 @@ class Portfolio extends React.Component {
 
   openBuyModal() {
     this.setState({showBuyModal: true});
+    this.setState({showModal: true});
   }
 
   openSellModal() {
-    this.setState({showSellModal: true});
+    this.setState({showBuyModal: false});
+    this.setState({showModal: true});
   }
 
   closeModal() {
-    this.setState({showBuyModal: false, showSellModal: false});
+    this.setState({showModal: false, showBuyModal: false, showSellModal: false});
   }
 
- 
+ printwallet(){
+    console.log(this.state.wallet);
+ }
 
   componentDidMount() {
+    
   }
 
   render() {
-
+      const {showBuyModal} = this.state;
       return (
         <div class="container">
           <h2 class="balancetitle">Balance in USD: ${this.state.usBalance}</h2><br/>
           <h4 class="balancetitle">Percent Change in 24hrs:  %</h4><br/>
           <div class="container col-sm-12">
-          <table class="table">
+          <table class="table table-striped">
             <thead class="thead-inverse">
               <tr>
                 <th scope="col">Symbol</th>
+                <th scope="col">Holdings</th>
                 <th scope="col">Price</th>
+                <th scope="col">Holdings (USD)</th>
                 <th scope="col">24hr High</th>
                 <th scope="col">24hr Low</th>
-                <th scope="col">Holdings</th>
-                <th scope="col">Holdings (USD)</th>
                 <th scope="col">Change % (24h)</th>
               </tr>
             </thead>
             <tbody>
               {Object.keys(this.state.wallet).map((key) => (
                 <tr>
-                  <td>{this.state.wallet[key].value}</td>
+                  <th>{key}</th>
+                  <td>{this.state.wallet[key]}</td>
                 </tr>
               ))}
             </tbody>
@@ -107,33 +140,49 @@ class Portfolio extends React.Component {
           <button onClick={this.openBuyModal} class="btn btn-primary port-button">Add Coin to Balance</button>
           <button onClick={this.openSellModal} class="btn btn-primary port-button">Remove Coin from Balance</button><br/>
           </div>
-         <Modal className="coinmodal" isOpen={this.state.showBuyModal} onRequestClose={this.closeModal} ariaHideApp={false}>
+         <Modal className="coinmodal" isOpen={this.state.showModal} onRequestClose={this.closeModal} ariaHideApp={false}>
             <div class="container-fluid">
               <div>
-                <form onSubmit={this.handleSubmit}>
-                  <div class="form-group">
-                    <label htmlFor="sel1">Select Coin:</label>
-                    <select class="form-control" value={this.state.dropdownActive} onChange={this.handleDropChange}>
-                      <option value="BTC">Bitcoin - BTC</option>
-                      <option value="ETH">Ether - ETH</option>
-                      <option value="XRP">Ripple - XRP</option>
-                      <option value="BCH">Bitcoin Cash - BCH</option>
-                      <option value="LTC">Litecoin - LTC</option>
-                      <option value="ADA">Cardano - ADA</option>
-                      <option value="XLM">Stellar - XLM</option>
-                      <option value="IOT">IOTA - IOT</option>
-                      <option value="NEO">NEO - NEO</option>
-                      <option value="XMR">Monero - XMR</option>
-                      <option value="other">Other...</option>
-                    </select><br/>
-                    {this.state.dropdownActive == "other" ? <input onChange={this.handleInputChange} name="BuySym" class="form-control" placeholder="Enter Symbol..." type="text"></input> : <div></div>}
-                  </div>
-                  <div class="form-group">
-                    <label htmlFor="quantity">Quantity:</label>
-                    <input onChange={this.handleInputChange} name="coinQuantity" class="form-control" placeholder="Enter Quantity..." type="number" min="0" step=".00000001"></input>
-                  </div>
-                  <button type="submit" class="btn btn-default">Submit</button>
-                </form>
+                {showBuyModal ? 
+                  <form onSubmit={this.handleAddSubmit}>
+                    <div class="form-group">
+                      <label htmlFor="sel1">Select Coin:</label>
+                      <select class="form-control" value={this.state.dropdownActive} onChange={this.handleDropChange}>
+                        <option value="BTC">Bitcoin - BTC</option>
+                        <option value="ETH">Ether - ETH</option>
+                        <option value="XRP">Ripple - XRP</option>
+                        <option value="BCH">Bitcoin Cash - BCH</option>
+                        <option value="LTC">Litecoin - LTC</option>
+                        <option value="ADA">Cardano - ADA</option>
+                        <option value="XLM">Stellar - XLM</option>
+                        <option value="IOT">IOTA - IOT</option>
+                        <option value="NEO">NEO - NEO</option>
+                        <option value="XMR">Monero - XMR</option>
+                        <option value="other">Other...</option>
+                      </select><br/>
+                      {this.state.dropdownActive == "other" ? <input onChange={this.handleInputChange} name="BuySym" class="form-control" placeholder="Enter Symbol..." type="text"></input> : <div></div>}
+                    </div>
+                    <div class="form-group">
+                      <label htmlFor="quantity">Quantity:</label>
+                      <input onChange={this.handleInputChange} name="coinQuantity" class="form-control" placeholder="Enter Quantity..." type="number" min="0" step=".00000001"></input>
+                    </div>
+                    <button type="submit" class="btn btn-default">Add to Portfolio</button>
+                  </form>
+                 : <form onSubmit={this.handleAddSubmit}>
+                    <div class="form-group">
+                      <label htmlFor="sel1">Select Coin:</label>
+                      <select class="form-control" value={this.state.dropdownActive} onChange={this.handleDropChange}>
+                        {Object.keys(this.state.wallet).map((key)=>(
+                          <option value={key}>{key}</option>    
+                        ))}
+                      </select><br/>
+                    </div>
+                    <div class="form-group">
+                      <label htmlFor="quantity">Quantity:</label>
+                      <input onChange={this.handleInputChange} name="coinQuantity" class="form-control" placeholder="Enter Quantity..." type="number" min="0" step=".00000001"></input>
+                    </div>
+                    <button type="submit" class="btn btn-default">Submit</button>
+                  </form>}
                 <div>
                 </div>
               </div>
