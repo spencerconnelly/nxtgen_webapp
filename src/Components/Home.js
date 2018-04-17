@@ -3,7 +3,7 @@ import Modal from 'react-modal';
 import './styles.css';
 
 
-class HomePage extends React.Component {
+class Home extends React.Component {
 
   constructor(props) {
     super(props);
@@ -119,4 +119,4 @@ class HomePage extends React.Component {
   }
 
 
-export default HomePage;
+export default Home;

@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import './App.css';
 import {Navbar} from 'react-bootstrap';
 import logo from './logo.png';
-import HomePage from './Components/HomePage';
+import Home from './Components/Home';
 import Portfolio from './Components/Portfolio';
 import ReactDOM from 'react-dom';
 import { BrowserRouter as Router, Route } from 'react-router-dom';
@@ -34,7 +34,7 @@ class App extends Component {
         </Navbar>
         <Router>
           <div>
-            <Route exact path="/" component={HomePage} />
+            <Route exact path="/" component={Home} />
             <Route path="/portfolio" component={Portfolio} />
           </div>
         </Router>

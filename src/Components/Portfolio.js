@@ -19,7 +19,6 @@ class Portfolio extends React.Component {
       coinQuantity: 0,
       showModal: false,
       showBuyModal: true,
-      showSellModal: null,
     };
 
     this.fetchData=this.fetchData.bind(this);
@@ -28,17 +27,19 @@ class Portfolio extends React.Component {
     this.openSellModal=this.openSellModal.bind(this);
     this.closeModal=this.closeModal.bind(this);
     this.handleAddSubmit=this.handleAddSubmit.bind(this);
+    this.handleSellSubmit=this.handleSellSubmit.bind(this);
     this.handleDropChange=this.handleDropChange.bind(this);
     this.handleInputChange=this.handleInputChange.bind(this);
   }
 
   fetchData(){
+    var walletSymbols = [];
     fetch("https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,ETH,XRP,BCH,LTC,ADA,XLM,NEO,IOT,XMR&tsyms=USD")
     .then(res => res.json())
     .then(
       (result) => {
         this.setState({
-          coins: result.DISPLAY
+          walletData: result.DISPLAY
         });
       })
     .then(
@@ -68,7 +69,15 @@ class Portfolio extends React.Component {
   }
 
   handleSellSubmit(event) {
-    console.log("sold");
+    if(this.state.BuySym in this.state.wallet && this.state.wallet[this.state.BuySym] >= this.state.coinQuantity && (this.state.coinQuantity > 0)){
+      this.state.wallet[this.state.BuySym] = this.state.wallet[this.state.BuySym] - this.state.coinQuantity;
+      this.closeModal();
+    } else if(this.state.wallet[this.state.BuySym] < this.state.coinQuantity){
+      alert("You do not have that many "+this.state.BuySym+" in your porfolio.");
+    } else if(this.state.coinQuantity <= 0){
+      alert("You must remove more than 0 from your porfolio");
+    }
+    event.preventDefault();
   }
 
   handleDropChange(event) {
@@ -98,7 +107,7 @@ class Portfolio extends React.Component {
   }
 
   closeModal() {
-    this.setState({showModal: false, showBuyModal: false, showSellModal: false});
+    this.setState({showModal: false, showBuyModal: false});
   }
 
  printwallet(){
@@ -159,8 +168,8 @@ class Portfolio extends React.Component {
                         <option value="NEO">NEO - NEO</option>
                         <option value="XMR">Monero - XMR</option>
                         <option value="other">Other...</option>
-                      </select><br/>
-                      {this.state.dropdownActive == "other" ? <input onChange={this.handleInputChange} name="BuySym" class="form-control" placeholder="Enter Symbol..." type="text"></input> : <div></div>}
+                      </select>
+                      {this.state.dropdownActive == "other" ? <div><br/><input onChange={this.handleInputChange} name="BuySym" class="form-control" placeholder="Enter Symbol..." type="text"></input></div> : <div></div>}
                     </div>
                     <div class="form-group">
                       <label htmlFor="quantity">Quantity:</label>
@@ -168,20 +177,20 @@ class Portfolio extends React.Component {
                     </div>
                     <button type="submit" class="btn btn-default">Add to Portfolio</button>
                   </form>
-                 : <form onSubmit={this.handleAddSubmit}>
+                 : <form onSubmit={this.handleSellSubmit}>
                     <div class="form-group">
                       <label htmlFor="sel1">Select Coin:</label>
                       <select class="form-control" value={this.state.dropdownActive} onChange={this.handleDropChange}>
                         {Object.keys(this.state.wallet).map((key)=>(
                           <option value={key}>{key}</option>    
                         ))}
-                      </select><br/>
+                      </select>
                     </div>
                     <div class="form-group">
                       <label htmlFor="quantity">Quantity:</label>
                       <input onChange={this.handleInputChange} name="coinQuantity" class="form-control" placeholder="Enter Quantity..." type="number" min="0" step=".00000001"></input>
                     </div>
-                    <button type="submit" class="btn btn-default">Submit</button>
+                    <button type="submit" class="btn btn-default">Remove from Portfolio</button>
                   </form>}
                 <div>
                 </div>
