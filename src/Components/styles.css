@@ -30,11 +30,11 @@ tbody tr:hover {
 }
 
 .coinmodal {
-	position: fixed;
+	position: relative;
 	top:25%;
-	left: 30%;
-	width: 40%;
-	height: 40%;
+	left: 25%;
+	width: 50%;
+	height: 50%;
     background-color: white;
     border: solid;
     border-width: 3px;
@@ -49,6 +49,7 @@ tbody tr:hover {
 	margin-top: 5%;
 	margin-right: 5%;
 }
+
 
 
 
