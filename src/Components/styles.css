@@ -34,7 +34,8 @@ tbody tr:hover {
 	top:25%;
 	left: 25%;
 	width: 50%;
-	height: 50%;
+	height: 30%;
+	padding-top: 2%;
     background-color: white;
     border: solid;
     border-width: 3px;
@@ -46,7 +47,7 @@ tbody tr:hover {
 
 .port-button {
 	position: relative;
-	margin-top: 5%;
+	margin-top: 2%;
 	margin-right: 5%;
 }
 

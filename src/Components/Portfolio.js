@@ -14,6 +14,8 @@ class Portfolio extends React.Component {
       dropdownActive: "BTC",
       BuySym: "BTC",
       wallet: {},
+      walletData: [],
+      walletDataDisplay: [],
       coinQuantities: [],
       usBalance: 0.00,
       coinQuantity: 0,
@@ -22,7 +24,6 @@ class Portfolio extends React.Component {
     };
 
     this.fetchData=this.fetchData.bind(this);
-    this.printwallet=this.printwallet.bind(this);
     this.openBuyModal=this.openBuyModal.bind(this);
     this.openSellModal=this.openSellModal.bind(this);
     this.closeModal=this.closeModal.bind(this);
@@ -34,28 +35,54 @@ class Portfolio extends React.Component {
 
   fetchData(){
     var walletSymbols = [];
-    fetch("https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,ETH,XRP,BCH,LTC,ADA,XLM,NEO,IOT,XMR&tsyms=USD")
-    .then(res => res.json())
-    .then(
-      (result) => {
-        this.setState({
-          walletData: result.DISPLAY
-        });
-      })
-    .then(
-      (error) => {
-        this.setState({
-          isLoaded: true,
-          error
-        });
+    Object.keys(this.state.wallet).map((key)=>{
+        walletSymbols.push(key);
+      });
+    walletSymbols=this.arrayToString(walletSymbols,',');
+    if(walletSymbols[0] !== undefined){
+      fetch("https://min-api.cryptocompare.com/data/pricemultifull?fsyms="+walletSymbols+"&tsyms=USD")
+      .then(res => res.json())
+      .then(
+        (result) => {
+          this.setState({
+            walletData: result.RAW,
+            walletDataDisplay: result.DISPLAY
+          });
+        })
+      .then(
+        (error) => {
+          this.setState({
+            isLoaded: true,
+            error
+          });
+        }
+      );
+    } 
+  }
+
+  //Helper function to turn array of strings, s, to a string segregated by d  
+  //Helps fetch the data from the api
+  arrayToString(s, d){
+    var x = '';
+    Object.keys(s).map((key) => {
+      console.log(key);
+      if(x != ''){
+        x = x + d + s[key];
+      } else{
+        x=s[key];
       }
-    );
+      
+    });
+    return x;
   }
 
   handleAddSubmit(event){
     if(!(this.state.BuySym in this.state.wallet)  &&  (this.state.coinQuantity > 0)){
       var newInput = Object.assign({}, this.state.wallet, {[this.state.BuySym]: Number(this.state.coinQuantity)});
-      this.setState({wallet: newInput});
+      this.setState({ wallet: newInput }, () => {
+        this.fetchData();
+      });
+      this.setState({coinQuantity: 0});
       this.closeModal();
     } else if(this.state.coinQuantity <= 0) {
       alert("Please Enter a Value Greater than 0 for Coin Quantity");
@@ -71,6 +98,7 @@ class Portfolio extends React.Component {
   handleSellSubmit(event) {
     if(this.state.BuySym in this.state.wallet && this.state.wallet[this.state.BuySym] >= this.state.coinQuantity && (this.state.coinQuantity > 0)){
       this.state.wallet[this.state.BuySym] = this.state.wallet[this.state.BuySym] - this.state.coinQuantity;
+      this.fetchData();
       this.closeModal();
     } else if(this.state.wallet[this.state.BuySym] < this.state.coinQuantity){
       alert("You do not have that many "+this.state.BuySym+" in your porfolio.");
@@ -95,7 +123,6 @@ class Portfolio extends React.Component {
     });
   }
 
-
   openBuyModal() {
     this.setState({showBuyModal: true});
     this.setState({showModal: true});
@@ -110,12 +137,13 @@ class Portfolio extends React.Component {
     this.setState({showModal: false, showBuyModal: false});
   }
 
- printwallet(){
-    console.log(this.state.wallet);
- }
+  //called before entering "other"
+  validateOtherCoin(coin) {
+
+  }
 
   componentDidMount() {
-    
+    setInterval(this.fetchData,10000);
   }
 
   render() {
@@ -125,7 +153,7 @@ class Portfolio extends React.Component {
           <h2 class="balancetitle">Balance in USD: ${this.state.usBalance}</h2><br/>
           <h4 class="balancetitle">Percent Change in 24hrs:  %</h4><br/>
           <div class="container col-sm-12">
-          <table class="table table-striped">
+          <table class="table">
             <thead class="thead-inverse">
               <tr>
                 <th scope="col">Symbol</th>
@@ -138,10 +166,15 @@ class Portfolio extends React.Component {
               </tr>
             </thead>
             <tbody>
-              {Object.keys(this.state.wallet).map((key) => (
+              {Object.keys(this.state.walletDataDisplay).map((key) => (
                 <tr>
-                  <th>{key}</th>
+                  <th>{this.state.walletDataDisplay[key].USD.FROMSYMBOL}</th>
                   <td>{this.state.wallet[key]}</td>
+                  <td>{this.state.walletDataDisplay[key].USD.PRICE}</td>
+                  <td>$ {this.state.walletData[key].USD.PRICE * this.state.wallet[key]}</td>
+                  <td>{this.state.walletDataDisplay[key].USD.HIGH24HOUR}</td>
+                  <td>{this.state.walletDataDisplay[key].USD.LOW24HOUR}</td>
+                  <td class={this.state.walletData[key].USD.CHANGEPCT24HOUR > 0 ? "growth" : "loss"}>{this.state.walletData[key].USD.CHANGEPCT24HOUR}%</td>
                 </tr>
               ))}
             </tbody>
