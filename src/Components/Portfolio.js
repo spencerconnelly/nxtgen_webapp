@@ -18,12 +18,14 @@ class Portfolio extends React.Component {
       walletDataDisplay: [],
       coinQuantities: [],
       usBalance: 0.00,
+      percentChange: 0.000,
       coinQuantity: 0,
       showModal: false,
       showBuyModal: true,
     };
 
     this.fetchData=this.fetchData.bind(this);
+    this.updateBalance=this.updateBalance.bind(this);
     this.openBuyModal=this.openBuyModal.bind(this);
     this.openSellModal=this.openSellModal.bind(this);
     this.closeModal=this.closeModal.bind(this);
@@ -47,6 +49,8 @@ class Portfolio extends React.Component {
           this.setState({
             walletData: result.RAW,
             walletDataDisplay: result.DISPLAY
+          }, () => {
+            this.updateBalance();
           });
         })
       .then(
@@ -65,7 +69,6 @@ class Portfolio extends React.Component {
   arrayToString(s, d){
     var x = '';
     Object.keys(s).map((key) => {
-      console.log(key);
       if(x != ''){
         x = x + d + s[key];
       } else{
@@ -89,7 +92,7 @@ class Portfolio extends React.Component {
     } else {
       const num = this.state.wallet[this.state.BuySym] + Number(this.state.coinQuantity);
       this.state.wallet[this.state.BuySym] = num ;
-
+      this.fetchData();
       this.closeModal();
     }
     event.preventDefault();
@@ -99,6 +102,13 @@ class Portfolio extends React.Component {
     if(this.state.BuySym in this.state.wallet && this.state.wallet[this.state.BuySym] >= this.state.coinQuantity && (this.state.coinQuantity > 0)){
       this.state.wallet[this.state.BuySym] = this.state.wallet[this.state.BuySym] - this.state.coinQuantity;
       this.fetchData();
+      if(this.state.wallet[this.state.BuySym] == 0){
+        const index = this.state.wallet.indexOf(this.state.BuySym);
+        console.log(index);
+        if (index !== -1) {
+            this.state.wallet.splice(index, 1);
+        }
+      }
       this.closeModal();
     } else if(this.state.wallet[this.state.BuySym] < this.state.coinQuantity){
       alert("You do not have that many "+this.state.BuySym+" in your porfolio.");
@@ -138,7 +148,12 @@ class Portfolio extends React.Component {
   }
 
   //called before entering "other"
-  validateOtherCoin(coin) {
+  updateBalance() {
+    var bal = 0;
+    Object.keys(this.state.walletData).map((key)=>{
+      bal += this.state.walletData[key].USD.PRICE * this.state.wallet[key];
+    });
+    this.setState({usBalance: bal});
 
   }
 
@@ -150,8 +165,8 @@ class Portfolio extends React.Component {
       const {showBuyModal} = this.state;
       return (
         <div class="container">
-          <h2 class="balancetitle">Balance in USD: ${this.state.usBalance}</h2><br/>
-          <h4 class="balancetitle">Percent Change in 24hrs:  %</h4><br/>
+          <h2 class="balancetitle">Balance in USD: <br/>$ {(this.state.usBalance).toFixed(2)}</h2><br/>
+          <h2 class="balancetitle">Percent Change in 24hrs:  <div class={this.state.percentChange > 0 ? "growth" : "loss"}>{(this.state.percentChange).toFixed(3)} %</div></h2><br/>
           <div class="container col-sm-12">
           <table class="table">
             <thead class="thead-inverse">
@@ -167,14 +182,14 @@ class Portfolio extends React.Component {
             </thead>
             <tbody>
               {Object.keys(this.state.walletDataDisplay).map((key) => (
-                <tr>
+                <tr class="center">
                   <th>{this.state.walletDataDisplay[key].USD.FROMSYMBOL}</th>
                   <td>{this.state.wallet[key]}</td>
                   <td>{this.state.walletDataDisplay[key].USD.PRICE}</td>
-                  <td>$ {this.state.walletData[key].USD.PRICE * this.state.wallet[key]}</td>
+                  <td>$ {(this.state.walletData[key].USD.PRICE * this.state.wallet[key]).toFixed(2)}</td>
                   <td>{this.state.walletDataDisplay[key].USD.HIGH24HOUR}</td>
                   <td>{this.state.walletDataDisplay[key].USD.LOW24HOUR}</td>
-                  <td class={this.state.walletData[key].USD.CHANGEPCT24HOUR > 0 ? "growth" : "loss"}>{this.state.walletData[key].USD.CHANGEPCT24HOUR}%</td>
+                  <td class={this.state.walletData[key].USD.CHANGEPCT24HOUR > 0 ? "growth" : "loss"}>{(this.state.walletData[key].USD.CHANGEPCT24HOUR).toFixed(3)}%</td>
                 </tr>
               ))}
             </tbody>

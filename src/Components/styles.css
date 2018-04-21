@@ -34,7 +34,7 @@ tbody tr:hover {
 	top:25%;
 	left: 25%;
 	width: 50%;
-	height: 30%;
+	height: 35%;
 	padding-top: 2%;
     background-color: white;
     border: solid;
@@ -49,6 +49,10 @@ tbody tr:hover {
 	position: relative;
 	margin-top: 2%;
 	margin-right: 5%;
+}
+
+.center {
+	text-align: center;
 }
 
 
