@@ -31,11 +31,11 @@ tbody tr:hover {
 
 .coinmodal {
 	position: relative;
-	top:25%;
-	left: 25%;
-	width: 50%;
-	height: 35%;
+	top: 25%;
+	left:25%;
+	width:50%;
 	padding-top: 2%;
+	padding-bottom: 2%;
     background-color: white;
     border: solid;
     border-width: 3px;
@@ -53,6 +53,10 @@ tbody tr:hover {
 
 .center {
 	text-align: center;
+}
+
+.modal-dialog {
+	
 }
 
 
