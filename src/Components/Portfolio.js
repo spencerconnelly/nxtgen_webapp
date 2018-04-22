@@ -14,6 +14,7 @@ class Portfolio extends React.Component {
       wallet: {},
       walletData: {},
       walletDataDisplay: {},
+      imageURLS: {},
       coinQuantities: [],
       usBalance: 0.00,
       percentChange: 0.000,
@@ -22,7 +23,6 @@ class Portfolio extends React.Component {
       showBuyModal: true,
       buyValue: 'BTC',
       sellValue: '',
-      imageURLS: {},
     };
 
     this.fetchData=this.fetchData.bind(this);
@@ -67,14 +67,18 @@ class Portfolio extends React.Component {
         }
       );
 
-      fetch(url+"coin/generalinfo?fsyms="+walletSymbols+"&tsyms=USD")
+      fetch(url+"coin/generalinfo?fsyms="+walletSymbols+"&tsym=USD")
       .then(res => res.json())
       .then(
         (result) => {
+          var images = {};
+          var i = 0;
+          Object.keys(this.state.wallet).map((key) => {
+            images = Object.assign({}, images, {[key]: result.Data[i].CoinInfo.ImageUrl});
+            i++;
+          });
           this.setState({
-            imageURLS: result.RAW,
-          }, () => {
-            this.updateBalance();
+            imageURLS: images
           });
         })
       .then(
@@ -86,9 +90,8 @@ class Portfolio extends React.Component {
         }
       );
 
-
-
     } else {
+      console.log('never here');
       this.setState({
             walletData: {},
             walletDataDisplay: {}
@@ -118,8 +121,12 @@ class Portfolio extends React.Component {
   }
 
   handleAddSubmit(event){
-    if(!(this.state.buyValue in this.state.wallet)  &&  (this.state.coinQuantity > 0)){
-      var newInput = Object.assign({}, this.state.wallet, {[this.state.buyValue]: Number(this.state.coinQuantity)});
+    var val = this.state.buyValue;
+    if(this.state.buyValue == "other") {
+      val = this.state.otherVal.toUpperCase();
+    }
+    if(!(val in this.state.wallet)  &&  (this.state.coinQuantity > 0)){
+      var newInput = Object.assign({}, this.state.wallet, {[val]: Number(this.state.coinQuantity)});
       this.setState({ wallet: newInput }, () => {
         this.fetchData();
         localStorage.setItem('myWallet', JSON.stringify(this.state.wallet));
@@ -129,8 +136,8 @@ class Portfolio extends React.Component {
     } else if(this.state.coinQuantity <= 0) {
       alert("Please Enter a Value Greater than 0 for Coin Quantity");
     } else {
-      const num = this.state.wallet[this.state.buyValue] + Number(this.state.coinQuantity);
-      this.state.wallet[this.state.buyValue] = num ;
+      const num = this.state.wallet[val] + Number(this.state.coinQuantity);
+      this.state.wallet[val] = num ;
       this.fetchData();
       localStorage.setItem('myWallet', JSON.stringify(this.state.wallet));
       this.closeModal();
@@ -139,9 +146,6 @@ class Portfolio extends React.Component {
   }
 
   handleSellSubmit(event) {
-    console.log(this.state.sellValue);
-    console.log(this.state.wallet[this.state.sellValue]);
-    console.log(this.state.coinQuantity);
     if(this.state.sellValue in this.state.wallet && this.state.wallet[this.state.sellValue] >= this.state.coinQuantity && (this.state.coinQuantity > 0)){
       this.state.wallet[this.state.sellValue] = this.state.wallet[this.state.sellValue] - this.state.coinQuantity;
       this.fetchData();
@@ -151,9 +155,9 @@ class Portfolio extends React.Component {
         const index = Object.keys(holder).indexOf(sym);
         if (index !== -1) {
           delete holder[sym];
-          this.setState({wallet: holder}, () => {
-            this.fetchData();
-          });
+          this.setState({wallet: holder}, 
+            this.fetchData
+          );
           localStorage.setItem('myWallet', JSON.stringify(holder));
         }
       }
@@ -228,7 +232,7 @@ class Portfolio extends React.Component {
     localStorage.clear();
     const oldWallet =  JSON.parse(localStorage.getItem('myWallet'));
     if(oldWallet){
-      this.setState({wallet: oldWallet, sellValue: Object.key(oldWallet)[0]}, () => {
+      this.setState({wallet: oldWallet, sellValue: Object.keys(oldWallet)[0]}, () => {
           this.fetchData();
       });
     }
@@ -245,6 +249,7 @@ class Portfolio extends React.Component {
           <table class="table">
             <thead class="thead-inverse">
               <tr>
+                <th scope="col">Avatar</th>
                 <th scope="col">Symbol</th>
                 <th scope="col">Holdings</th>
                 <th scope="col">Price</th>
@@ -256,9 +261,10 @@ class Portfolio extends React.Component {
             </thead>
             <tbody>
               {Object.keys(this.state.walletDataDisplay).map((key) => (
-                <tr class="center">
+                <tr>
+                  <td><img class="small-pic" src={"https://www.cryptocompare.com"+this.state.imageURLS[key]} alt="oops" /></td>
                   <th>{this.state.walletDataDisplay[key].USD.FROMSYMBOL}</th>
-                  <td>{Number(this.state.wallet[key]).toLocaleString()}</td>
+                  <td>{Number(this.state.wallet[key]).toFixed(8).toLocaleString()}</td>
                   <td>{this.state.walletDataDisplay[key].USD.PRICE}</td>
                   <td>$ {(Number((this.state.walletData[key].USD.PRICE * this.state.wallet[key]).toFixed(2))).toLocaleString()}</td>
                   <td>{this.state.walletDataDisplay[key].USD.HIGH24HOUR}</td>
@@ -291,7 +297,7 @@ class Portfolio extends React.Component {
                         <option value="XMR">Monero - XMR</option>
                         <option value="other">Other...</option>
                       </select>
-                      
+                      {this.state.buyValue == "other" ? <div><br/><input onChange={this.handleInputChange} name="otherVal" class="form-control" placeholder="Enter Symbol..." type="text"></input></div> : <div></div>}
                     </div>
                     <div class="form-group">
                       <label htmlFor="quantity">Quantity:</label>

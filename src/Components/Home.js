@@ -13,7 +13,8 @@ class Home extends React.Component {
       isLoaded: false,
       coins: [],
       showModal: false,
-      modalKey: null
+      modalKey: null,
+      imageURLS: {},
     };
 
 
@@ -23,7 +24,8 @@ class Home extends React.Component {
   }
 
   fetchData() {
-    fetch("https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,ETH,XRP,BCH,LTC,ADA,XLM,NEO,IOT,XMR&tsyms=USD")
+    const url = "https://min-api.cryptocompare.com/data/";
+    fetch(url+"pricemultifull?fsyms=BTC,ETH,XRP,BCH,LTC,ADA,XLM,NEO,IOT,XMR&tsyms=USD")
     .then(res => res.json())
     .then(
       (result) => {
@@ -39,6 +41,29 @@ class Home extends React.Component {
         });
       }
     );
+
+    fetch(url+"coin/generalinfo?fsyms=BTC,ETH,XRP,BCH,LTC,ADA,XLM,NEO,IOT,XMR&tsym=USD")
+      .then(res => res.json())
+      .then(
+        (result) => {
+          var images = {};
+          var i = 0;
+          Object.keys(this.state.coins).map((key) => {
+            images = Object.assign({}, images, {[key]: result.Data[i].CoinInfo.ImageUrl});
+            i++;
+          });
+          this.setState({
+            imageURLS: images
+          });
+        })
+      .then(
+        (error) => {
+          this.setState({
+            isLoaded: true,
+            error
+          });
+        }
+      );
   }
 
   
@@ -67,6 +92,7 @@ class Home extends React.Component {
           <table class="table">
             <thead class="thead-inverse">
               <tr>
+                <th scope="col">Avatar</th>
                 <th scope="col">Symbol</th>
                 <th scope="col">Market Cap</th>
                 <th scope="col">Price</th>
@@ -79,6 +105,7 @@ class Home extends React.Component {
             <tbody>
               {Object.keys(this.state.coins).map((key) => (
                 <tr onClick={() => this.openModal(key)} class="hover-row">
+                  <td>{this.state.imageURLS.length != 0 ? <img class="small-pic" alt="" src={"https://www.cryptocompare.com"+this.state.imageURLS[key]} alt="oops" /> : <div></div>}</td>
                   <th scope="row">{this.state.coins[key].USD.FROMSYMBOL}</th>
                   <td>{this.state.coins[key].USD.MKTCAP}</td>
                   <td>{this.state.coins[key].USD.PRICE}</td>
@@ -97,16 +124,7 @@ class Home extends React.Component {
             <div class="container-fluid">
               <h4>{this.state.modalKey}</h4>
               <div class="row">
-                <div class="col">
-                  <div class="container">
-                    sup
-                  </div>
-                </div>
-                <div class="col">
-                  <div class="container">
-                    sup
-                  </div>
-                </div>
+                
               </div>
               <button class="btn btn-primary" onClick={this.closeModal}>close</button>
             </div>
