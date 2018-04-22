@@ -11,11 +11,9 @@ class Portfolio extends React.Component {
     this.state = {
       error: null,
       isLoaded: false,
-      dropdownActive: "BTC",
-      BuySym: "BTC",
       wallet: {},
-      walletData: [],
-      walletDataDisplay: [],
+      walletData: {},
+      walletDataDisplay: {},
       coinQuantities: [],
       usBalance: 0.00,
       percentChange: 0.000,
@@ -25,13 +23,13 @@ class Portfolio extends React.Component {
     };
 
     this.fetchData=this.fetchData.bind(this);
+    this.getInitialState=this.getInitialState.bind(this);
     this.updateBalance=this.updateBalance.bind(this);
     this.openBuyModal=this.openBuyModal.bind(this);
     this.openSellModal=this.openSellModal.bind(this);
     this.closeModal=this.closeModal.bind(this);
     this.handleAddSubmit=this.handleAddSubmit.bind(this);
     this.handleSellSubmit=this.handleSellSubmit.bind(this);
-    this.handleDropChange=this.handleDropChange.bind(this);
     this.handleInputChange=this.handleInputChange.bind(this);
   }
 
@@ -61,6 +59,13 @@ class Portfolio extends React.Component {
           });
         }
       );
+    } else {
+      this.setState({
+            walletData: {},
+            walletDataDisplay: {}
+          }, () => {
+            this.updateBalance();
+          });
     } 
   }
 
@@ -79,11 +84,16 @@ class Portfolio extends React.Component {
     return x;
   }
 
+  getInitialState(s) {
+    return JSON.parse(localStorage.getItem(s) || '{}');
+  }
+
   handleAddSubmit(event){
-    if(!(this.state.BuySym in this.state.wallet)  &&  (this.state.coinQuantity > 0)){
-      var newInput = Object.assign({}, this.state.wallet, {[this.state.BuySym]: Number(this.state.coinQuantity)});
+    if(!(document.getElementById("buyform").value in this.state.wallet)  &&  (this.state.coinQuantity > 0)){
+      var newInput = Object.assign({}, this.state.wallet, {[document.getElementById("buyform").value]: Number(this.state.coinQuantity)});
       this.setState({ wallet: newInput }, () => {
         this.fetchData();
+        localStorage.setItem('myWallet', JSON.stringify(this.state.wallet));
       });
       this.setState({coinQuantity: 0});
       this.closeModal();
@@ -91,36 +101,38 @@ class Portfolio extends React.Component {
       alert("Please Enter a Value Greater than 0 for Coin Quantity");
     } else {
       const num = this.state.wallet[this.state.BuySym] + Number(this.state.coinQuantity);
-      this.state.wallet[this.state.BuySym] = num ;
+      this.state.wallet[document.getElementById("buyform").value] = num ;
       this.fetchData();
+      localStorage.setItem('myWallet', JSON.stringify(this.state.wallet));
       this.closeModal();
     }
     event.preventDefault();
   }
 
   handleSellSubmit(event) {
-    if(this.state.BuySym in this.state.wallet && this.state.wallet[this.state.BuySym] >= this.state.coinQuantity && (this.state.coinQuantity > 0)){
-      this.state.wallet[this.state.BuySym] = this.state.wallet[this.state.BuySym] - this.state.coinQuantity;
+    alert(this.state.dropdownActive);
+    if(document.getElementById("sellform").value in this.state.wallet && this.state.wallet[document.getElementById("sellform").value] >= this.state.coinQuantity && (this.state.coinQuantity > 0)){
+      this.state.wallet[document.getElementById("sellform").value] = this.state.wallet[document.getElementById("sellform").value] - this.state.coinQuantity;
       this.fetchData();
-      if(this.state.wallet[this.state.BuySym] == 0){
-        const index = this.state.wallet.indexOf(this.state.BuySym);
-        console.log(index);
+      if(this.state.wallet[document.getElementById("sellform").value] == 0){
+        const holder = this.state.wallet;
+        const sym = document.getElementById("sellform").value;
+        const index = Object.keys(holder).indexOf(sym);
         if (index !== -1) {
-            this.state.wallet.splice(index, 1);
+          delete holder[sym];
+          localStorage.setItem('myWallet', JSON.stringify(holder));
+          this.setState({wallet: holder}, () => {
+          this.fetchData();
+          });
         }
       }
       this.closeModal();
-    } else if(this.state.wallet[this.state.BuySym] < this.state.coinQuantity){
+    } else if(this.state.wallet[document.getElementById("sellform").value] < this.state.coinQuantity){
       alert("You do not have that many "+this.state.BuySym+" in your porfolio.");
     } else if(this.state.coinQuantity <= 0){
       alert("You must remove more than 0 from your porfolio");
     }
     event.preventDefault();
-  }
-
-  handleDropChange(event) {
-    this.setState({dropdownActive: event.target.value});
-    this.setState({BuySym: event.target.value});
   }
 
   handleInputChange(event) {
@@ -157,7 +169,23 @@ class Portfolio extends React.Component {
 
   }
 
+  updatePercentChange() {
+    var oldbalance = 0;
+    Object.keys(this.state.walletData).map((key) => {
+
+    });
+
+    var newpercent = (this.state.usBalance - oldbalance) / this.state.usBalance;
+    this.setState({percentChange: newpercent});
+  }
+
   componentDidMount() {
+    const oldWallet =  JSON.parse(localStorage.getItem('myWallet'));
+    if(oldWallet){
+      this.setState({wallet: oldWallet, dropdownActive: Object.keys(oldWallet)[0]}, () => {
+          this.fetchData();
+      });
+    }
     setInterval(this.fetchData,10000);
   }
 
@@ -204,7 +232,7 @@ class Portfolio extends React.Component {
                   <form onSubmit={this.handleAddSubmit}>
                     <div class="form-group">
                       <label htmlFor="sel1">Select Coin:</label>
-                      <select class="form-control" value={this.state.dropdownActive} onChange={this.handleDropChange}>
+                      <select class="form-control" id="buyform" onChange={this.handleDropChange}>
                         <option value="BTC">Bitcoin - BTC</option>
                         <option value="ETH">Ether - ETH</option>
                         <option value="XRP">Ripple - XRP</option>
@@ -228,7 +256,7 @@ class Portfolio extends React.Component {
                  : <form onSubmit={this.handleSellSubmit}>
                     <div class="form-group">
                       <label htmlFor="sel1">Select Coin:</label>
-                      <select class="form-control" value={this.state.dropdownActive} onChange={this.handleDropChange}>
+                      <select class="form-control" id="sellform" onChange={this.handleDropChange}>
                         {Object.keys(this.state.wallet).map((key)=>(
                           <option value={key}>{key}</option>    
                         ))}
