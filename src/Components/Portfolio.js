@@ -41,6 +41,9 @@ class Portfolio extends React.Component {
     this.handleInputChange=this.handleInputChange.bind(this);
   }
 
+
+  //Used to fetch all necessary data.  
+  //In further iterations I would make a helper class for this functionality
   fetchData(){
     const url = "https://min-api.cryptocompare.com/data/";
     var walletSymbols = [];
@@ -121,6 +124,7 @@ class Portfolio extends React.Component {
     return JSON.parse(localStorage.getItem(s) || '{}');
   }
 
+  //Called after submitting coin to add to the portfolio
   handleAddSubmit(event){
     var valid = true;
     var val = this.state.buyValue;
@@ -164,6 +168,7 @@ class Portfolio extends React.Component {
     event.preventDefault();
   }
 
+  //Verifies the input of the 'other' buy option
   verifyInput(s){
     const url = "https://min-api.cryptocompare.com/data/";
     fetch(url+"coin/generalinfo?fsyms="+s+"&tsym=USD")
@@ -181,6 +186,7 @@ class Portfolio extends React.Component {
       
   }
 
+  //Called when submit is called on the sell modal
   handleSellSubmit(event) {
     if(this.state.sellValue in this.state.wallet && this.state.wallet[this.state.sellValue] >= this.state.coinQuantity && (this.state.coinQuantity > 0)){
       this.state.wallet[this.state.sellValue] = this.state.wallet[this.state.sellValue] - this.state.coinQuantity;
@@ -207,6 +213,7 @@ class Portfolio extends React.Component {
     event.preventDefault();
   }
 
+  //Called when a state needs to be updated after changing an input field
   handleInputChange(event) {
     const target = event.target;
     const value = target.type === 'checkbox' ? target.checked : target.value;
@@ -240,7 +247,7 @@ class Portfolio extends React.Component {
     this.setState({showModal: false, showBuyModal: false});
   }
 
-  //called before entering "other"
+  //Sums the wallet and updates the balance at the top of the component
   updateBalance() {
     var bal = 0;
     Object.keys(this.state.walletData).map((key)=>{
@@ -255,6 +262,7 @@ class Portfolio extends React.Component {
 
   }
 
+  //Updates the 24 hour percent change at the top of the component
   updatePercentChange() {
     var change24Hour = 0;
     Object.keys(this.state.walletData).map((key) => {
@@ -265,6 +273,7 @@ class Portfolio extends React.Component {
     this.setState({percentChange: newpercent});
   }
 
+  //Built-in react function called when a component is mounted
   componentDidMount() {
     const oldWallet =  JSON.parse(localStorage.getItem('myWallet'));
     if(oldWallet){
