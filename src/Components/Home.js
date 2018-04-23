@@ -23,6 +23,7 @@ class Home extends React.Component {
     this.closeModal=this.closeModal.bind(this);
   }
 
+  //Gets the data from the API
   fetchData() {
     const url = "https://min-api.cryptocompare.com/data/";
     fetch(url+"pricemultifull?fsyms=BTC,ETH,XRP,BCH,LTC,ADA,XLM,NEO,IOT,XMR&tsyms=USD")
@@ -32,15 +33,8 @@ class Home extends React.Component {
         this.setState({
           coins: result.DISPLAY
         });
-      })
-    .then(
-      (error) => {
-        this.setState({
-          isLoaded: true,
-          error
-        });
-      }
-    );
+      });
+    
 
     fetch(url+"coin/generalinfo?fsyms=BTC,ETH,XRP,BCH,LTC,ADA,XLM,NEO,IOT,XMR&tsym=USD")
       .then(res => res.json())
@@ -55,28 +49,29 @@ class Home extends React.Component {
           this.setState({
             imageURLS: images
           });
-        })
-      .then(
-        (error) => {
-          this.setState({
-            isLoaded: true,
-            error
-          });
-        }
-      );
+        }).then(
+      (error) => {
+        this.setState({
+          isLoaded: true,
+          error
+        });
+      }
+    );
   }
 
   
 
-
+  //Opens up a modal when a row is clicked in the table
   openModal(key) {
     this.setState({showModal: true, modalKey: key});
   }
 
+  //Closes the modal
   closeModal() {
     this.setState({showModal: false, modalKey: null});
   }
 
+  //Function called before the component is initially rendered
   componentDidMount() {
     this.fetchData();
     setInterval(this.fetchData,3000);

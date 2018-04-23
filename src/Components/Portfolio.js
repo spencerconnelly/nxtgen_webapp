@@ -23,9 +23,11 @@ class Portfolio extends React.Component {
       showBuyModal: true,
       buyValue: 'BTC',
       sellValue: '',
+      validInput: null,
     };
 
     this.fetchData=this.fetchData.bind(this);
+    this.verifyInput=this.verifyInput.bind(this);
     this.getInitialState=this.getInitialState.bind(this);
     this.updateBalance=this.updateBalance.bind(this);
     this.updatePercentChange=this.updatePercentChange.bind(this);
@@ -91,7 +93,6 @@ class Portfolio extends React.Component {
       );
 
     } else {
-      console.log('never here');
       this.setState({
             walletData: {},
             walletDataDisplay: {}
@@ -121,11 +122,22 @@ class Portfolio extends React.Component {
   }
 
   handleAddSubmit(event){
+    var valid = true;
     var val = this.state.buyValue;
     if(this.state.buyValue == "other") {
-      val = this.state.otherVal.toUpperCase();
+      const x = this.state.otherVal;
+      this.verifyInput(x.toUpperCase());
+      setTimeout(()=>{
+        if(this.state.validInput == true){
+          val = x;
+        } else {
+          valid = false;
+        }
+      },300); 
     }
-    if(!(val in this.state.wallet)  &&  (this.state.coinQuantity > 0)){
+    setTimeout(x=>{
+      console.log(valid);
+      if(!(val in this.state.wallet)  &&  (this.state.coinQuantity > 0) && valid){
       var newInput = Object.assign({}, this.state.wallet, {[val]: Number(this.state.coinQuantity)});
       this.setState({ wallet: newInput }, () => {
         this.fetchData();
@@ -136,19 +148,44 @@ class Portfolio extends React.Component {
     } else if(this.state.coinQuantity <= 0) {
       alert("Please Enter a Value Greater than 0 for Coin Quantity");
     } else {
-      const num = this.state.wallet[val] + Number(this.state.coinQuantity);
-      this.state.wallet[val] = num ;
-      this.fetchData();
-      localStorage.setItem('myWallet', JSON.stringify(this.state.wallet));
-      this.closeModal();
+      //console.log('5');
+      if(valid){
+        const num = this.state.wallet[val] + Number(this.state.coinQuantity);
+        this.state.wallet[val] = num ;
+        this.fetchData();
+        localStorage.setItem('myWallet', JSON.stringify(this.state.wallet));
+        this.closeModal();
+      } else{
+        alert('There is no coin with that trading symbol');
+      }
     }
+      },500);
+    
     event.preventDefault();
+  }
+
+  verifyInput(s){
+    const url = "https://min-api.cryptocompare.com/data/";
+    fetch(url+"coin/generalinfo?fsyms="+s+"&tsym=USD")
+      .then(res => res.json())
+      .then(
+        (result) => {
+          this.setState({holder: result['Message']},()=>{
+            if(this.state.holder == 'Success'){
+              this.setState({validInput: true});
+            } else {
+              this.setState({validInput: false});
+            }
+          });
+        });
+      
   }
 
   handleSellSubmit(event) {
     if(this.state.sellValue in this.state.wallet && this.state.wallet[this.state.sellValue] >= this.state.coinQuantity && (this.state.coinQuantity > 0)){
       this.state.wallet[this.state.sellValue] = this.state.wallet[this.state.sellValue] - this.state.coinQuantity;
       this.fetchData();
+      localStorage.setItem('myWallet', JSON.stringify(this.state.wallet));
       if(this.state.wallet[this.state.sellValue] == 0){
         const holder = this.state.wallet;
         const sym = this.state.sellValue;
@@ -163,7 +200,7 @@ class Portfolio extends React.Component {
       }
       this.closeModal();
     } else if(this.state.wallet[this.state.sellValue] < this.state.coinQuantity){
-      alert("You do not have that many "+this.state.BuySym+" in your porfolio.");
+      alert("You do not have that many "+this.state.sellValue+" in your porfolio.");
     } else if(this.state.coinQuantity <= 0){
       alert("You must remove more than 0 from your porfolio");
     }
@@ -229,7 +266,6 @@ class Portfolio extends React.Component {
   }
 
   componentDidMount() {
-    localStorage.clear();
     const oldWallet =  JSON.parse(localStorage.getItem('myWallet'));
     if(oldWallet){
       this.setState({wallet: oldWallet, sellValue: Object.keys(oldWallet)[0]}, () => {
@@ -297,7 +333,7 @@ class Portfolio extends React.Component {
                         <option value="XMR">Monero - XMR</option>
                         <option value="other">Other...</option>
                       </select>
-                      {this.state.buyValue == "other" ? <div><br/><input onChange={this.handleInputChange} name="otherVal" class="form-control" placeholder="Enter Symbol..." type="text"></input></div> : <div></div>}
+                      {this.state.buyValue == "other" ? <div><br/><input onChange={this.handleInputChange} name="otherVal" class="form-control" placeholder="Enter Symbol..." type="text"></input><i>Make sure to capitalize the trading symbol</i></div> : <div></div>}
                     </div>
                     <div class="form-group">
                       <label htmlFor="quantity">Quantity:</label>
